@@ -1,0 +1,16 @@
+# API de Cadastro de Clientes
+
+## Endpoints
+
+### POST /api/clientes
+
+Cria um novo cliente.
+
+#### Corpo da Requisição
+
+```json
+{
+  "nome": "string",
+  "email": "string",
+  "senha": "string"
+}
