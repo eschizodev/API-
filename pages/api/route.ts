@@ -5,8 +5,8 @@ import { Redis } from '@upstash/redis'
 import { z } from 'zod'
 import argon2 from 'argon2'
 import jwt from 'jsonwebtoken'
-import { config } from './config'
-import { authMiddleware } from './middleware/auth'
+import { config } from '../../config'
+import { authMiddleware } from '../../middleware/auth'
 
 const prisma = new PrismaClient()
 

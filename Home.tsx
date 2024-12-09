@@ -1,6 +1,21 @@
 import React, { JSX } from 'react';
-import ClienteForm from '../../components/ClienteForm'; // Certifique-se de que o caminho para o seu componente está correto
+import ClienteForm from './components/ClienteForm';
 
+function Home(): JSX.Element {
+  return (
+    <div style={styles.container}>
+      <div style={styles.header}>
+        <h2 style={styles.headerText}>Cadastro de Cliente</h2>
+      </div>
+
+      <div style={styles.formContainer}>
+        <div style={styles.formCard}>
+          <ClienteForm />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const styles: { [key: string]: React.CSSProperties } = {
   container: {
@@ -41,3 +56,5 @@ const styles: { [key: string]: React.CSSProperties } = {
     alignItems: 'center',
   },
 };
+
+export default Home;
