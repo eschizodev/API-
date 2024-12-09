@@ -1,14 +1,12 @@
-'use client'
-
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 import { z } from 'zod'
+import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { config } from '../../../config'
 import { authMiddleware } from '../../../middleware/auth'
-import { use } from 'react'
 
 const prisma = new PrismaClient()
 
@@ -24,12 +22,15 @@ const clienteSchema = z.object({
   senha: z.string().min(8).max(100),
 })
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1'
   const { success } = await ratelimit.limit(ip)
 
   if (!success) {
-    return NextResponse.json({ error: 'Muitas requisições. Tente novamente mais tarde.' }, { status: 429 })
+    return NextResponse.json(
+      { error: 'Muitas requisições. Tente novamente mais tarde.' },
+      { status: 429 }
+    )
   }
 
   try {
@@ -41,10 +42,13 @@ export async function POST(request: Request) {
     })
 
     if (existingCliente) {
-      return NextResponse.json({ error: 'Email já está em uso' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Email já está em uso' },
+        { status: 400 }
+      )
     }
 
-    const hashedSenha = await crypto.hash(validatedData.senha, 10)
+    const hashedSenha = await bcrypt.hash(validatedData.senha, 10)
 
     const novoCliente = await prisma.cliente.create({
       data: {
@@ -56,25 +60,40 @@ export async function POST(request: Request) {
 
     const { senha: _, ...clienteSemSenha } = novoCliente
 
-    const token = jwt.sign({ userId: novoCliente.id }, config.jwtSecret, { expiresIn: config.jwtExpiresIn })
-    const refreshToken = jwt.sign({ userId: novoCliente.id }, config.jwtSecret, { expiresIn: config.refreshTokenExpiresIn })
+    const token = jwt.sign(
+      { userId: novoCliente.id },
+      config.jwtSecret,
+      { expiresIn: config.jwtExpiresIn }
+    )
+    const refreshToken = jwt.sign(
+      { userId: novoCliente.id },
+      config.jwtSecret,
+      { expiresIn: config.refreshTokenExpiresIn }
+    )
 
     const response = NextResponse.json(clienteSemSenha, { status: 201 })
-    response.cookies.set('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' })
-    response.cookies.set('refreshToken', refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production' })
+    response.cookies.set('token', token, { httpOnly: true, secure: true })
+    response.cookies.set('refreshToken', refreshToken, { httpOnly: true, secure: true })
 
     return response
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Dados inválidos', details: error.errors }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Dados inválidos', details: error.errors },
+        { status: 400 }
+      )
     }
     console.error('Erro ao criar cliente:', error)
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    )
   }
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const authResponse = authMiddleware(request)
+
   if (authResponse.status !== 200) {
     return authResponse
   }
@@ -83,9 +102,13 @@ export async function GET(request: Request) {
     const clientes = await prisma.cliente.findMany({
       select: { id: true, nome: true, email: true, createdAt: true, updatedAt: true },
     })
+
     return NextResponse.json(clientes)
   } catch (error) {
     console.error('Erro ao buscar clientes:', error)
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    )
   }
 }
