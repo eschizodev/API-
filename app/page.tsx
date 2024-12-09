@@ -1,4 +1,8 @@
-import ClienteForm from './components/ClienteForm'
+
+
+'use client';
+
+import ClienteForm from '../components/ClienteForm';
 
 export default function Home() {
   return (
@@ -15,6 +19,5 @@ export default function Home() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-

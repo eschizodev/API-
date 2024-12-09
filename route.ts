@@ -3,10 +3,10 @@ import { PrismaClient } from '@prisma/client'
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 import { z } from 'zod'
-import bcrypt from 'bcrypt'
+import argon2 from 'argon2'
 import jwt from 'jsonwebtoken'
-import { config } from '../../../config'
-import { authMiddleware } from '../../../middleware/auth'
+import { config } from './config'
+import { authMiddleware } from './middleware/auth'
 
 const prisma = new PrismaClient()
 
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const hashedSenha = await bcrypt.hash(validatedData.senha, 10)
+    const hashedSenha = await argon2.hash(validatedData.senha)
 
     const novoCliente = await prisma.cliente.create({
       data: {

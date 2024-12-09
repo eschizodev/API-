@@ -1,65 +1,39 @@
+// ClienteForm.tsx
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { z } from 'zod';
-import React from 'react';
 
-const clienteSchema = z.object({
-  nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(100, 'Nome deve ter no máximo 100 caracteres'),
-  email: z.string().email('Email inválido'),
-  senha: z.string().min(8, 'Senha deve ter pelo menos 8 caracteres').max(100, 'Senha deve ter no máximo 100 caracteres'),
-})
-
-export default function ClienteForm() {
-  const [formData, setFormData] = useState({ nome: '', email: '', senha: '' })
-  
-  // Tipo de erros atualizado
-  const [errors, setErrors] = useState<{ [key: string]: string | string[] }>({})
-  
-  const router = useRouter()
+const ClienteForm = () => {
+  const [formData, setFormData] = useState({
+    nome: '',
+    email: '',
+    senha: '',
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
-  }
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setErrors({})
-    try {
-        clienteSchema.parse(formData)
-      
-        const response = await fetch('/api/clientes', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
-          credentials: 'include',
-        })
-      
-        if (!response.ok) {
-          const data = await response.json()
-          throw new Error(data.error || 'Erro ao cadastrar cliente')
-        }
-      
-        router.push('/sucesso')
-      } catch (err) {
-        if (err instanceof z.ZodError) {
-          // Filtrando os erros undefined e mantendo apenas erros válidos
-          const flattenErrors = err.flatten().fieldErrors
-          const filteredErrors = Object.fromEntries(
-            Object.entries(flattenErrors).map(([key, value]) => [
-              key,
-              value ? value : [] // Se o valor for undefined, converta para um array vazio
-            ])
-          )
-          setErrors(filteredErrors)
-        } else if (err instanceof Error) {
-          setErrors({ form: err.message })
-        }
-      }
-      
-      
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validação simples (adicione conforme necessário)
+    if (!formData.nome || !formData.email || !formData.senha) {
+      alert('Todos os campos são obrigatórios');
+      return;
     }
+
+    // Resetando os campos após o envio
+    setFormData({
+      nome: '',
+      email: '',
+      senha: '',
+    });
+
+    // Adicione aqui a lógica para enviar os dados (ex: API, etc.)
+    console.log('Formulário enviado:', formData);
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
@@ -70,12 +44,10 @@ export default function ClienteForm() {
           name="nome"
           value={formData.nome}
           onChange={handleChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
         />
-        {Array.isArray(errors.nome) ? errors.nome.map((error, index) => (
-          <p key={index} className="text-red-500 text-xs mt-1">{error}</p>
-        )) : errors.nome && <p className="text-red-500 text-xs mt-1">{errors.nome}</p>}
       </div>
+
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
         <input
@@ -84,12 +56,10 @@ export default function ClienteForm() {
           name="email"
           value={formData.email}
           onChange={handleChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
         />
-        {Array.isArray(errors.email) ? errors.email.map((error, index) => (
-          <p key={index} className="text-red-500 text-xs mt-1">{error}</p>
-        )) : errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
       </div>
+
       <div>
         <label htmlFor="senha" className="block text-sm font-medium text-gray-700">Senha</label>
         <input
@@ -98,16 +68,18 @@ export default function ClienteForm() {
           name="senha"
           value={formData.senha}
           onChange={handleChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
         />
-        {Array.isArray(errors.senha) ? errors.senha.map((error, index) => (
-          <p key={index} className="text-red-500 text-xs mt-1">{error}</p>
-        )) : errors.senha && <p className="text-red-500 text-xs mt-1">{errors.senha}</p>}
       </div>
-      {errors.form && <p className="text-red-500">{errors.form}</p>}
-      <button type="submit" className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+
+      <button
+        type="submit"
+        className="w-full py-2 px-4 border border-transparent rounded-md text-white bg-indigo-600"
+      >
         Cadastrar
       </button>
     </form>
-  )
-}
+  );
+};
+
+export default ClienteForm;
